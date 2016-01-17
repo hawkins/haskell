@@ -1,10 +1,25 @@
 -- Following video tutorial found here: https://www.youtube.com/watch?v=ScS8Q32lMxA
+{-# LANGUAGE FlexibleInstances, UndecidableInstances, OverlappingInstances #-}
 
 module Chess where
 
 import Test.HUnit
 import Test.QuickCheck
 import Data.Char
+
+-- | Nothingish class to extract data from Maybe
+class Nothingish a where
+    nada :: a
+instance Nothingish (Maybe a) where
+    nada = Nothing
+instance Nothingish [a] where
+    nada = []
+instance (Num a) => Nothingish a where
+    nada = 0
+
+eliminate :: (Nothingish a) => Maybe a -> a
+eliminate (Just a) = a
+eliminate Nothing  = nada
 
 type Board = [[Square]]
 
@@ -18,8 +33,8 @@ initBoardString = unlines ["rnbqkbnr",
                            "PPPPPPPP",
                            "RNBQKBNR"]
 
-readBoard :: String -> Maybe Board
-readBoard = (mapM . mapM) readSquare . lines
+readBoard :: String -> Board
+readBoard = (map . map) (fmap eliminate readSquare) . lines
 
 showBoard :: Board -> String
 showBoard = unlines . (map . map) showSquare
